@@ -5,6 +5,8 @@
 #include "Physics/RStaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMeshActor.h"
+#include "Animation/SkeletalMeshActor.h"
+#include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "RGraspComponent.generated.h"
@@ -40,7 +42,7 @@ public:
 	// Fixated object
 
 	UPROPERTY()
-	AStaticMeshActor* FixatedObject;
+	AActor* FixatedObject;
 
 	UPROPERTY()
 	AActor* ObjectToPublish;
@@ -84,12 +86,12 @@ protected:
 	// Function called when an item enters the fixation overlap area
 
 	// Array of items currently in reach (overlapping the sphere component)
-	TArray<AStaticMeshActor*> ObjectsInReach;
+	TArray<AActor*> ObjectsInReach;
 
         UPrimitiveComponent* ComponentInReach = nullptr;
 
 	// Fixate object to hand
-	virtual void FixateObject(AStaticMeshActor* InSMA, UPrimitiveComponent* InSMC);
+	virtual void FixateObject(AActor* InSMA, UPrimitiveComponent* InSMC);
 
 	UPROPERTY()
 	bool bGraspObjectGravity;
