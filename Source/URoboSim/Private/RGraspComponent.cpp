@@ -85,6 +85,10 @@ void URGraspComponent::OnFixationGraspAreaBeginOverlap(class UPrimitiveComponent
       ObjectsInReach.Emplace(OtherSMA);
       ComponentInReach = OtherComp;
     }
+  else if (ASkeletalMeshActor* OtherSKMA = Cast<ASkeletalMeshActor>(OtherActor))
+  {
+    ObjectsInReach.Emplace(OtherSKMA);
+  }
 }
 
 void URGraspComponent::OnFixationGraspAreaEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor,
@@ -96,6 +100,10 @@ void URGraspComponent::OnFixationGraspAreaEndOverlap(class UPrimitiveComponent* 
       UE_LOG(LogTemp, Log, TEXT("%s: Object left Reach"), *SMA->GetName());
       ObjectsInReach.Remove(SMA);
     }
+  else if (ASkeletalMeshActor* OtherSKMA = Cast<ASkeletalMeshActor>(OtherActor))
+  {
+    ObjectsInReach.Remove(OtherSKMA);
+  }
 }
 
 // Try to fixate object to hand
@@ -107,7 +115,7 @@ bool URGraspComponent::TryToFixate()
   if(!bObjectGrasped && ObjectsInReach.Num() > 0)
     {
       // Pop a SMA
-      AStaticMeshActor* SMA = ObjectsInReach[0];
+      AActor* SMA = Cast<AActor>(ObjectsInReach[0]);
 
       // Check if the actor is graspable
       FixateObject(SMA, ComponentInReach);
@@ -120,10 +128,10 @@ bool URGraspComponent::TryToFixate()
 }
 
 // Fixate object to hand
-void URGraspComponent::FixateObject(AStaticMeshActor* InSMA, UPrimitiveComponent* InSMC)
+void URGraspComponent::FixateObject(AActor* InSMA, UPrimitiveComponent* InSMC)
 {
   // AStaticMeshActor* ConstrainedActor = Cast<AStaticMeshActor>(InSMA->GetAttachParentActor());
-  AStaticMeshActor* ConstrainedActor = InSMA;
+  AActor* ConstrainedActor = InSMA;
 
   //If the grasped object is attached to another object (door handle), connecting via constraints moves
   // the gripper to the root object
@@ -131,7 +139,8 @@ void URGraspComponent::FixateObject(AStaticMeshActor* InSMA, UPrimitiveComponent
   int NumIter = 0;
   while(!bParentFound)
     {
-      AStaticMeshActor* TempActor = Cast<AStaticMeshActor>(ConstrainedActor->GetAttachParentActor());
+      //AStaticMeshActor* TempActor = Cast<AStaticMeshActor>(ConstrainedActor->GetAttachParentActor());
+      AActor* TempActor = Cast<AActor>(ConstrainedActor->GetAttachParentActor());
       if(TempActor)
         {
           ConstrainedActor = TempActor;
@@ -150,10 +159,19 @@ void URGraspComponent::FixateObject(AStaticMeshActor* InSMA, UPrimitiveComponent
     SMC = InSMC;
   }
   else
+  {
+    //SMC = ConstrainedActor->GetStaticMeshComponent();
+    if (AStaticMeshActor* SMA = Cast<AStaticMeshActor>(ConstrainedActor))
     {
-      SMC = ConstrainedActor->GetStaticMeshComponent();
-      ComponentInReach = SMC;
+      SMC = SMA->GetStaticMeshComponent();
     }
+    else if (ASkeletalMeshActor* SKMA = Cast<ASkeletalMeshActor>(ConstrainedActor))
+    {
+      //USkeletalMeshComponent* SKMC = nullptr;
+      SMC = SKMA->GetSkeletalMeshComponent();
+    }
+    ComponentInReach = SMC;
+  }
 
 
   if(!SMC)
